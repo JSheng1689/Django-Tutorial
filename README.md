@@ -1,3 +1,3 @@
 # Django-Tutorial
-Learning more about Django
-Followed Sentdex's tutorial.
+<p>Learning more about Django.</p>
+<p>Followed Sentdex's tutorial.</p>
