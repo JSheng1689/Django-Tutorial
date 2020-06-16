@@ -1,15 +1,44 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from .models import Tutorial
+from .models import Tutorial, TutorialCategory, TutorialSeries
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.contrib import messages
 from .forms import NewUserForm
 # Create your views here.
+
+def single_slug(request, single_slug): #From urls.py
+    """
+    Determine if category or tutorial to see how many slashes to add
+    .../category/tutorial vs .../category/
+    """
+    categories = [c.category_slug for c in TutorialCategory.objects.all()]
+    if single_slug in categories:
+        #Point at the series tutorial category's category slug
+        #double __ is a points to b a__b
+        matching_series = TutorialSeries.objects.filter(tutorial_category__category_slug = single_slug)
+        series_urls = {}
+        #Returns all the tutorials that are a part of the series, showing earliest published tutorial
+        for m in matching_series.all():
+            part_one = Tutorial.objects.filter(tutorial_series__tutorial_series = m.tutorial_series).earliest('tutorial_published')
+            series_urls[m] = part_one.tutorial_slug
+        return render(request,
+                      template_name = 'main/category.html',
+                       context={"tutorial_series": matching_series, 
+                       "part_ones": series_urls})
+    tutorials = [t.tutorial_slug for t in Tutorial.objects.all()]
+    if single_slug in tutorials:
+        return HttpResponse(f"{single_slug} is a tutorial")
+    
+    return HttpResponse(f"{single_slug} does not correspond to anything")
+
+
+
 def homepage(request):
+    #Shows categories on home page
     return render(request = request, 
-                template_name = 'main/home.html', 
-                context = {'tutorials': Tutorial.objects.all})
+                template_name = 'main/categories.html',  
+                context = {'categories': TutorialCategory.objects.all})
     #Template name adds on main/home.html to this file path
 
 def register(request):
